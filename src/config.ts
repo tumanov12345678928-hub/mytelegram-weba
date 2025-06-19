@@ -3,6 +3,7 @@ import type {
 } from './api/types';
 import type {
   GiftProfileFilterOptions,
+  ResaleGiftsFilterOptions,
 } from './types';
 
 export const APP_CODE_NAME = 'A';
@@ -13,12 +14,16 @@ export const PRODUCTION_HOSTNAME = 'web.telegram.org';
 export const PRODUCTION_URL = 'https://web.telegram.org/a';
 export const WEB_VERSION_BASE = 'https://web.telegram.org/'; // Used to redirect to other versions
 export const BASE_URL = process.env.BASE_URL;
+export const ACCOUNT_QUERY = 'account';
 
 export const IS_MOCKED_CLIENT = process.env.APP_MOCKED_CLIENT === '1';
 export const IS_TEST = process.env.APP_ENV === 'test';
 export const IS_PERF = process.env.APP_ENV === 'perf';
 export const IS_BETA = process.env.APP_ENV === 'staging';
 export const IS_PACKAGED_ELECTRON = process.env.IS_PACKAGED_ELECTRON;
+
+export const ELECTRON_WINDOW_DRAG_EVENT_START = 'tt-electron-window-drag-start';
+export const ELECTRON_WINDOW_DRAG_EVENT_END = 'tt-electron-window-drag-end';
 export const PAID_MESSAGES_PURPOSE = 'paid_messages';
 
 export const DEBUG = process.env.APP_ENV !== 'production';
@@ -38,11 +43,14 @@ export const INACTIVE_MARKER = '[Inactive]';
 
 export const DEBUG_PAYMENT_SMART_GLOCAL = false;
 
-export const SESSION_USER_KEY = 'user_auth';
+export const SESSION_LEGACY_USER_KEY = 'user_auth';
+export const SESSION_ACCOUNT_PREFIX = 'account';
 export const LEGACY_PASSCODE_CACHE_NAME = 'tt-passcode';
 
+export const MULTIACCOUNT_MAX_SLOTS = 6;
 export const GLOBAL_STATE_CACHE_DISABLED = false;
-export const GLOBAL_STATE_CACHE_KEY = 'tt-global-state';
+export const GLOBAL_STATE_CACHE_PREFIX = 'tt-global-state';
+export const SHARED_STATE_CACHE_KEY = 'tt-shared-state';
 export const GLOBAL_STATE_CACHE_USER_LIST_LIMIT = 500;
 export const GLOBAL_STATE_CACHE_CHAT_LIST_LIMIT = 200;
 export const GLOBAL_STATE_CACHE_ARCHIVED_CHAT_LIST_LIMIT = 10;
@@ -60,9 +68,10 @@ export const CUSTOM_BG_CACHE_NAME = 'tt-custom-bg';
 export const LANG_CACHE_NAME = 'tt-lang-packs-v49';
 export const ASSET_CACHE_NAME = 'tt-assets';
 export const AUTODOWNLOAD_FILESIZE_MB_LIMITS = [1, 5, 10, 50, 100, 500];
-export const DATA_BROADCAST_CHANNEL_NAME = 'tt-global';
-export const ESTABLISH_BROADCAST_CHANNEL_NAME = 'tt-establish';
-export const MULTITAB_LOCALSTORAGE_KEY = 'tt-multitab';
+export const DATA_BROADCAST_CHANNEL_PREFIX = 'tt-global';
+export const ESTABLISH_BROADCAST_CHANNEL_PREFIX = 'tt-establish';
+export const MULTITAB_LOCALSTORAGE_KEY_PREFIX = 'tt-multitab';
+export const DC_IDS = [1, 2, 3, 4, 5] as const;
 
 export const DOWNLOAD_WORKERS = 16;
 export const UPLOAD_WORKERS = 16;
@@ -96,6 +105,7 @@ export const GROUP_CALL_PARTICIPANTS_LIMIT = 100;
 export const STORY_LIST_LIMIT = 100;
 export const API_GENERAL_ID_LIMIT = 100;
 export const STATISTICS_PUBLIC_FORWARDS_LIMIT = 50;
+export const RESALE_GIFTS_LIMIT = 50;
 
 export const STORY_VIEWS_MIN_SEARCH = 15;
 export const STORY_MIN_REACTIONS_SORT = 10;
@@ -151,7 +161,7 @@ export const GENERAL_REFETCH_INTERVAL = 60 * 60 * 1000; // 1h
 export const EDITABLE_INPUT_ID = 'editable-message-text';
 export const EDITABLE_INPUT_MODAL_ID = 'editable-message-text-modal';
 export const EDITABLE_STORY_INPUT_ID = 'editable-story-input-text';
-// eslint-disable-next-line max-len
+// eslint-disable-next-line @stylistic/max-len
 export const EDITABLE_INPUT_CSS_SELECTOR = `.messages-layout .Transition_slide-active #${EDITABLE_INPUT_ID}, .messages-layout .Transition > .Transition_slide-to #${EDITABLE_INPUT_ID}`;
 export const EDITABLE_INPUT_MODAL_CSS_SELECTOR = `#${EDITABLE_INPUT_MODAL_ID}`;
 export const EDITABLE_STORY_INPUT_CSS_SELECTOR = `#${EDITABLE_STORY_INPUT_ID}`;
@@ -247,6 +257,7 @@ export const BIRTHDAY_NUMBERS_SET = 'FestiveFontEmoji';
 export const RESTRICTED_EMOJI_SET = 'RestrictedEmoji';
 
 export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+export const SVG_EXTENSIONS = new Set(['svg', 'svgz']);
 
 export const VIDEO_WEBM_TYPE = 'video/webm';
 export const GIF_MIME_TYPE = 'image/gif';
@@ -300,7 +311,7 @@ export const SUPPORTED_TRANSLATION_LANGUAGES = [
   'cy', 'xh', 'yi', 'yo', 'zu',
 ];
 
-// eslint-disable-next-line max-len
+// eslint-disable-next-line @stylistic/max-len
 export const RE_LINK_TEMPLATE = '((ftp|https?):\\/\\/)?((www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z][-a-zA-Z0-9]{1,62})\\b([-a-zA-Z0-9()@:%_+.,~#?&/=]*)';
 export const RE_MENTION_TEMPLATE = '(@[\\w\\d_-]+)';
 export const RE_TG_LINK = /^tg:(\/\/)?/i;
@@ -316,7 +327,7 @@ export const TME_WEB_DOMAINS = new Set(['t.me', 'web.t.me', 'a.t.me', 'k.t.me', 
 export const WEB_APP_PLATFORM = 'weba';
 export const LANG_PACK = 'weba';
 
-// eslint-disable-next-line max-len
+// eslint-disable-next-line @stylistic/max-len
 export const COUNTRIES_WITH_12H_TIME_FORMAT = new Set(['AU', 'BD', 'CA', 'CO', 'EG', 'HN', 'IE', 'IN', 'JO', 'MX', 'MY', 'NI', 'NZ', 'PH', 'PK', 'SA', 'SV', 'US']);
 
 export const API_CHAT_TYPES = ['bots', 'channels', 'chats', 'users', 'groups'] as const;
@@ -332,7 +343,7 @@ export const REPLIES_USER_ID = '1271266957'; // TODO For Test connection ID must
 export const VERIFICATION_CODES_USER_ID = '489000';
 export const ANONYMOUS_USER_ID = '2666000';
 export const RESTRICTED_EMOJI_SET_ID = '7173162320003080';
-export const CHANNEL_ID_LENGTH = 14; // 14 symbols, based on TDLib's `ZERO_CHANNEL_ID = -1000000000000`
+export const CHANNEL_ID_BASE = 10 ** 12;
 export const DEFAULT_GIF_SEARCH_BOT_USERNAME = 'gif';
 export const ALL_FOLDER_ID = 0;
 export const ARCHIVED_FOLDER_ID = 1;
@@ -392,6 +403,7 @@ export const DEFAULT_LIMITS: Record<ApiLimitType, readonly [number, number]> = {
   chatlistJoined: [2, 20],
   recommendedChannels: [10, 100],
   savedDialogsPinned: [5, 100],
+  moreAccounts: [3, MULTIACCOUNT_MAX_SLOTS],
 };
 export const DEFAULT_MAX_MESSAGE_LENGTH = 4096;
 
@@ -444,10 +456,11 @@ export const PREMIUM_LIMITS_ORDER: ApiLimitTypeForPromo[] = [
   'captionLength',
   'dialogFilters',
   'dialogFiltersChats',
+  'moreAccounts',
   'recommendedChannels',
 ];
 
-export const DEFAULT_GIFT_PROFILE_FILTER_OPTIONS : GiftProfileFilterOptions = {
+export const DEFAULT_GIFT_PROFILE_FILTER_OPTIONS: GiftProfileFilterOptions = {
   sortType: 'byDate',
   shouldIncludeUnlimited: true,
   shouldIncludeLimited: true,
@@ -455,3 +468,9 @@ export const DEFAULT_GIFT_PROFILE_FILTER_OPTIONS : GiftProfileFilterOptions = {
   shouldIncludeDisplayed: true,
   shouldIncludeHidden: true,
 } as const;
+
+export const DEFAULT_RESALE_GIFTS_FILTER_OPTIONS: ResaleGiftsFilterOptions = {
+  sortType: 'byDate',
+};
+
+export const ACCOUNT_TTL_OPTIONS = [1, 3, 6, 12, 18, 24];

@@ -8,6 +8,7 @@ import type {
   ApiChatlistInvite,
   ApiChatReactions,
   ApiChatType,
+  ApiDisallowedGiftsSettings,
   ApiDraft,
   ApiExportedInvite,
   ApiFormattedText,
@@ -57,6 +58,7 @@ import type { FoldersActions } from '../../hooks/reducers/useFoldersReducer';
 import type { ReducerAction } from '../../hooks/useReducer';
 import type { P2pMessage } from '../../lib/secret-sauce';
 import type {
+  AccountSettings,
   AudioOrigin,
   CallSound,
   ChatListType,
@@ -64,8 +66,8 @@ import type {
   GiftProfileFilterOptions,
   GlobalSearchContent,
   IAnchorPosition,
-  ISettings,
   IThemeSettings,
+  LeftColumnContent,
   LoadMoreDirection,
   ManagementScreens,
   MediaViewerMedia,
@@ -78,6 +80,7 @@ import type {
   PerformanceType,
   Point,
   ProfileTabType,
+  ResaleGiftsFilterOptions,
   ScrollTargetPosition,
   SendMessageParams,
   SettingsScreens,
@@ -92,6 +95,7 @@ import type {
 } from '../../types';
 import type { WebApp, WebAppModalStateType, WebAppOutboundEvent } from '../../types/webapp';
 import type { DownloadableMedia } from '../helpers';
+import type { SharedState } from './sharedState';
 import type { TabState } from './tabState';
 
 export type WithTabId = { tabId?: number };
@@ -119,7 +123,7 @@ export interface ActionPayloads {
     lastName: string;
   };
   returnToAuthPhoneNumber: undefined;
-  setAuthRememberMe: boolean;
+  setAuthRememberMe: { value: boolean };
   clearAuthErrorKey: undefined;
   uploadProfilePhoto: {
     file: File;
@@ -172,7 +176,8 @@ export interface ActionPayloads {
   closeChatInviteModal: WithTabId | undefined;
 
   // settings
-  setSettingOption: Partial<ISettings> | undefined;
+  setSettingOption: Partial<AccountSettings> | undefined;
+  setSharedSettingOption: Partial<SharedState['settings']> | undefined;
   updatePerformanceSettings: Partial<PerformanceType>;
   loadPasswordInfo: undefined;
   clearTwoFaError: undefined;
@@ -248,10 +253,10 @@ export interface ActionPayloads {
   };
   loadNotificationExceptions: undefined;
   setThemeSettings: { theme: ThemeKey } & Partial<IThemeSettings>;
-  updateIsOnline: boolean;
+  updateIsOnline: { isOnline: boolean };
 
   loadContentSettings: undefined;
-  updateContentSettings: boolean;
+  updateContentSettings: { isSensitiveEnabled: boolean };
 
   loadCountryList: {
     langCode?: string;
@@ -265,7 +270,7 @@ export interface ActionPayloads {
   clearWebPagePreview: WithTabId | undefined;
   loadWallpapers: undefined;
   uploadWallpaper: File;
-  setDeviceToken: string;
+  setDeviceToken: { token: string };
   deleteDeviceToken: undefined;
   checkVersionNotification: undefined;
   createServiceNotification: {
@@ -304,7 +309,7 @@ export interface ActionPayloads {
     currentMediaMessageId: number;
     direction?: LoadMoreDirection;
     chatId?: string;
-    threadId? : ThreadId;
+    threadId?: ThreadId;
     limit?: number;
   } & WithTabId;
   searchMessagesByDate: {
@@ -340,13 +345,18 @@ export interface ActionPayloads {
     listType: ChatListType;
     whenFirstBatchDone?: () => Promise<void>;
   };
+  loadPinnedDialogs: {
+    listType: ChatListType;
+  };
   openChatWithInfo: ActionPayloads['openChat'] & {
     profileTab?: ProfileTabType;
     forceScrollProfileTab?: boolean;
   } & WithTabId;
   openThreadWithInfo: ActionPayloads['openThread'] & WithTabId;
   openLinkedChat: { id: string } & WithTabId;
-  loadMoreMembers: WithTabId | undefined;
+  loadMoreMembers: {
+    chatId: string;
+  };
   setActiveChatFolder: {
     activeChatFolder: number;
   } & WithTabId;
@@ -502,21 +512,24 @@ export interface ActionPayloads {
   loadSponsoredMessages: {
     peerId: string;
   };
-  viewSponsoredMessage: {
-    peerId: string;
+  viewSponsored: {
+    randomId: string;
   };
-  clickSponsoredMessage: {
-    peerId: string;
+  clickSponsored: {
+    randomId: string;
     isMedia?: boolean;
     isFullscreen?: boolean;
   };
-  reportSponsoredMessage: {
-    peerId: string;
+  reportSponsored: {
+    peerId?: string;
     randomId: string;
     option?: string;
   } & WithTabId;
   openAboutAdsModal: {
-    chatId: string;
+    randomId: string;
+    canReport?: boolean;
+    sponsorInfo?: string;
+    additionalInfo?: string;
   } & WithTabId;
   closeAboutAdsModal: WithTabId | undefined;
   openPreparedInlineMessageModal: {
@@ -540,7 +553,7 @@ export interface ActionPayloads {
   openPreviousReportModal: WithTabId | undefined;
   closeReportAdModal: WithTabId | undefined;
   closeReportModal: WithTabId | undefined;
-  hideSponsoredMessages: WithTabId | undefined;
+  hideSponsored: WithTabId | undefined;
   loadSendAs: {
     chatId: string;
   };
@@ -677,8 +690,11 @@ export interface ActionPayloads {
     title: string;
     about?: string;
     photo?: File;
-    memberIds: string[];
-  } & WithTabId;
+    memberIds?: string[];
+    discussionChannelId?: string;
+  } & (
+    { isChannel: true } | { isSuperGroup: true }
+  ) & WithTabId;
   createGroupChat: {
     title: string;
     memberIds: string[];
@@ -954,6 +970,7 @@ export interface ActionPayloads {
     shouldReplaceHistory?: boolean;
     noForumTopicPanel?: boolean;
     quote?: string;
+    quoteOffset?: number;
     scrollTargetPosition?: ScrollTargetPosition;
     timestamp?: number;
   } & WithTabId;
@@ -961,6 +978,9 @@ export interface ActionPayloads {
   focusLastMessage: WithTabId | undefined;
   updateDraftReplyInfo: Partial<ApiInputMessageReplyInfo> & WithTabId;
   resetDraftReplyInfo: WithTabId | undefined;
+  updateInsertingPeerIdMention: {
+    peerId?: string;
+  } & WithTabId;
 
   // Multitab
   destroyConnection: undefined;
@@ -994,7 +1014,7 @@ export interface ActionPayloads {
   openLimitReachedModal: { limit: ApiLimitTypeWithModal } & WithTabId;
   closeLimitReachedModal: WithTabId | undefined;
   checkAppVersion: undefined;
-  setIsElectronUpdateAvailable: boolean;
+  setIsElectronUpdateAvailable: { isAvailable: boolean };
   setGlobalSearchClosing: ({
     isClosing?: boolean;
   } & WithTabId) | undefined;
@@ -1023,6 +1043,16 @@ export interface ActionPayloads {
   changeSessionTtl: {
     days: number;
   };
+  openFrozenAccountModal: WithTabId | undefined;
+  closeFrozenAccountModal: WithTabId | undefined;
+  openDeleteAccountModal: {
+    days: number;
+  } & WithTabId | undefined;
+  closeDeleteAccountModal: WithTabId | undefined;
+  setAccountTTL: {
+    days: number;
+  } & WithTabId | undefined;
+  loadAccountDaysTtl: undefined;
 
   // Chats
   loadPeerSettings: {
@@ -1049,6 +1079,14 @@ export interface ActionPayloads {
     chatId: string;
     isEnabled: boolean;
   };
+  updatePaidMessagesPrice: {
+    chatId: string;
+    paidMessagesStars: number;
+  } & WithTabId;
+  toggleAutoTranslation: {
+    chatId: string;
+    isEnabled: boolean;
+  } & WithTabId;
 
   updateChat: {
     chatId: string;
@@ -1124,6 +1162,9 @@ export interface ActionPayloads {
     chatId: string;
     withPhotos?: boolean;
     force?: boolean;
+  };
+  invalidateFullInfo: {
+    peerId: string;
   };
   updateChatPhoto: {
     chatId: string;
@@ -1566,7 +1607,7 @@ export interface ActionPayloads {
     privacy: ApiPrivacySettings;
   };
   toggleStoriesHidden: {
-    peerId : string;
+    peerId: string;
     isHidden: boolean;
   };
   loadStoriesMaxIds: {
@@ -1710,6 +1751,7 @@ export interface ActionPayloads {
   startBotFatherConversation: {
     param: string;
   } & WithTabId;
+  loadBotFreezeAppeal: undefined;
   checkUsername: {
     username: string;
   } & WithTabId;
@@ -1767,6 +1809,7 @@ export interface ActionPayloads {
     fromChatId: string;
     messageId?: number;
     quoteText?: ApiFormattedText;
+    quoteOffset?: number;
   } & WithTabId;
 
   // Forwards
@@ -2150,6 +2193,7 @@ export interface ActionPayloads {
     shouldSendGrouped?: boolean;
     isInvertedMedia?: true;
     webPageMediaSize?: WebPageMediaSize;
+    shouldSendInHighQuality?: boolean;
   };
 
   saveEffectInDraft: {
@@ -2202,7 +2246,7 @@ export interface ActionPayloads {
 
   requestCollectibleInfo: {
     peerId: string;
-    type : 'phone' | 'username';
+    type: 'phone' | 'username';
     collectible: string;
   } & WithTabId;
   closeCollectibleInfoModal: WithTabId | undefined;
@@ -2246,10 +2290,6 @@ export interface ActionPayloads {
     username: string;
     inviteHash: string;
   } & WithTabId;
-  subscribeToGroupCallUpdates: {
-    subscribed: boolean;
-    id: string;
-  };
   createGroupCallInviteLink: WithTabId | undefined;
 
   loadMoreGroupCallParticipants: undefined;
@@ -2293,8 +2333,13 @@ export interface ActionPayloads {
   } | undefined;
   loadPeerColors: undefined;
   loadTimezones: undefined;
-  requestNextSettingsScreen: {
+  openLeftColumnContent: {
+    contentKey?: LeftColumnContent;
+  } & WithTabId;
+  openSettingsScreen: {
     screen?: SettingsScreens;
+  } & WithTabId;
+  requestNextFoldersAction: {
     foldersAction?: ReducerAction<FoldersActions>;
   } & WithTabId;
   sortChatFolders: { folderIds: number[] };
@@ -2319,6 +2364,8 @@ export interface ActionPayloads {
     shouldHideReadMarks?: boolean;
     shouldNewNonContactPeersRequirePremium?: boolean;
     nonContactPeersPaidStars?: number | null;
+    shouldDisplayGiftsButton?: boolean;
+    disallowedGifts?: ApiDisallowedGiftsSettings;
   };
 
   // Premium
@@ -2372,6 +2419,14 @@ export interface ActionPayloads {
 
   loadPremiumGifts: undefined;
   loadStarGifts: undefined;
+  updateResaleGiftsFilter: {
+    filter: ResaleGiftsFilterOptions;
+  } & WithTabId;
+  loadResaleGifts: {
+    giftId: string;
+    shouldRefresh?: boolean;
+  } & WithTabId;
+  resetResaleGifts: WithTabId | undefined;
   loadDefaultTopicIcons: undefined;
   loadPremiumStickers: undefined;
 
@@ -2380,6 +2435,11 @@ export interface ActionPayloads {
   } & WithTabId;
   closeGiftModal: WithTabId | undefined;
   sendStarGift: StarGiftInfo & WithTabId;
+  buyStarGift: {
+    peerId: string;
+    slug: string;
+    stars: number;
+  } & WithTabId;
   sendPremiumGiftByStars: {
     userId: string;
     months: number;
@@ -2393,11 +2453,17 @@ export interface ActionPayloads {
   } & WithTabId;
   openGiftInfoModal: ({
     peerId: string;
+    recipientId?: string;
     gift: ApiSavedStarGift;
   } | {
     gift: ApiStarGift;
   }) & WithTabId;
+  openGiftResalePriceComposerModal: ({
+    peerId: string;
+    gift: ApiSavedStarGift;
+  }) & WithTabId;
   closeGiftInfoModal: WithTabId | undefined;
+  closeGiftResalePriceComposerModal: WithTabId | undefined;
 
   openGiftUpgradeModal: {
     giftId: string;
@@ -2439,6 +2505,9 @@ export interface ActionPayloads {
     peerId: string;
     shouldRefresh?: boolean;
   } & WithTabId;
+  reloadPeerSavedGifts: {
+    peerId: string;
+  };
   changeGiftVisibility: {
     gift: ApiInputSavedStarGift;
     shouldUnsave?: boolean;
@@ -2449,6 +2518,11 @@ export interface ActionPayloads {
   toggleSavedGiftPinned: {
     peerId: string;
     gift: ApiSavedStarGift;
+  } & WithTabId;
+
+  updateStarGiftPrice: {
+    gift: ApiInputSavedStarGift;
+    price: number;
   } & WithTabId;
 
   openStarsGiftModal: ({
