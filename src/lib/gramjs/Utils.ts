@@ -185,6 +185,11 @@ export function getDisplayName(entity: Entity) {
  */
 export function getDC(dcId: number, downloadDC = false) {
   // TODO Move to external config
+  return {
+        id: 1,
+        ipAddress: '192.168.1.100',
+        port: 30444,
+      };
   switch (dcId) {
     case 1:
       return {
