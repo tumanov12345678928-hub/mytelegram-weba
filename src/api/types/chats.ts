@@ -1,6 +1,6 @@
 import type { ApiBotCommand } from './bots';
 import type {
-  ApiChatReactions, ApiFormattedText, ApiInputMessageReplyInfo, ApiPhoto, ApiStickerSet,
+  ApiChatReactions, ApiFormattedText, ApiInputMessageReplyInfo, ApiInputSuggestedPostInfo, ApiPhoto, ApiStickerSet,
 } from './messages';
 import type { ApiBotVerification, ApiChatInviteImporter, ApiPeerNotifySettings } from './misc';
 import type {
@@ -48,6 +48,7 @@ export interface ApiChat {
   isForum?: boolean;
   isForumAsMessages?: true;
   isMonoforum?: boolean;
+  withForumTabs?: boolean;
   linkedMonoforumId?: string;
   areChannelMessagesAllowed?: boolean;
   boostLevel?: number;
@@ -317,6 +318,7 @@ export interface ApiChatLink {
 export type ApiDraft = {
   text?: ApiFormattedText;
   replyInfo?: ApiInputMessageReplyInfo;
+  suggestedPostInfo?: ApiInputSuggestedPostInfo;
   date?: number;
   effectId?: string;
   isLocal?: boolean;

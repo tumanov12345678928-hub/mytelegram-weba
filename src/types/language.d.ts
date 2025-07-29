@@ -50,6 +50,7 @@ export interface LangPair {
   'PremiumPreviewVoiceToTextDescription': undefined;
   'PremiumPreviewProfileBadgeDescription': undefined;
   'PremiumPreviewDownloadSpeedDescription': undefined;
+  'PremiumPreviewTodoDescription': undefined;
   'PremiumPreviewUploadsDescription': undefined;
   'PremiumPreviewAdvancedChatManagementDescription': undefined;
   'PremiumPreviewAnimatedProfilesDescription': undefined;
@@ -1537,6 +1538,58 @@ export interface LangPair {
   'MonoforumComposerPlaceholder': undefined;
   'ChannelSendMessage': undefined;
   'AutomaticTranslation': undefined;
+  'ComposerEmbeddedMessageSuggestedPostTitle': undefined;
+  'ComposerEmbeddedMessageSuggestedPostDescription': undefined;
+  'ActionSuggestedPostOutgoing': undefined;
+  'ActionSuggestedChangesPrice': undefined;
+  'ActionSuggestedChangesText': undefined;
+  'ActionSuggestedChangesTime': undefined;
+  'ActionSuggestedChangesMedia': undefined;
+  'TitlePrice': undefined;
+  'TitleTime': undefined;
+  'TitleSuggestMessage': undefined;
+  'TitleSuggestedChanges': undefined;
+  'EnterPriceInStars': undefined;
+  'SuggestMessageDateTimeHint': undefined;
+  'TitleAnytime': undefined;
+  'ButtonOfferFree': undefined;
+  'ButtonUpdateTerms': undefined;
+  'InputPlaceholderPrice': undefined;
+  'SuggestedPostApprove': undefined;
+  'SuggestedPostDecline': undefined;
+  'SuggestedPostSuggestChanges': undefined;
+  'InputTitleSuggestMessageTime': undefined;
+  'SuggestedPostApproved': undefined;
+  'SuggestedPostRejectedNotification': undefined;
+  'SuggestedPostAgreementReached': undefined;
+  'CurrencyStars': undefined;
+  'DeclineReasonPlaceholder': undefined;
+  'SuggestedPostRejectedYou': undefined;
+  'SuggestedPostRejectedWithReasonYou': undefined;
+  'ComposerPlaceholderCaption': undefined;
+  'SuggestedPostConfirmTitle': undefined;
+  'ButtonPublish': undefined;
+  'PublishNow': undefined;
+  'TitleNewToDoList': undefined;
+  'TitleEditToDoList': undefined;
+  'TitleAppendToDoList': undefined;
+  'InputTitle': undefined;
+  'TitleToDoList': undefined;
+  'TitleTask': undefined;
+  'TitleAddTask': undefined;
+  'AllowOthersAddTasks': undefined;
+  'AllowOthersMarkAsDone': undefined;
+  'AriaToDoCancel': undefined;
+  'TitleGroupToDoList': undefined;
+  'TitleYourToDoList': undefined;
+  'MenuButtonAppendTodoList': undefined;
+  'PremiumMore': undefined;
+  'SubscribeToTelegramPremiumForToggleTask': undefined;
+  'SubscribeToTelegramPremiumForCreateToDo': undefined;
+  'SubscribeToTelegramPremiumForAppendToDo': undefined;
+  'ToDoListErrorChooseTitle': undefined;
+  'ToDoListErrorChooseTasks': undefined;
+  'PremiumPreviewTodo': undefined;
 }
 
 export interface LangPairWithVariables<V = LangVariable> {
@@ -2518,6 +2571,192 @@ export interface LangPairWithVariables<V = LangVariable> {
   'ComposerTitleForwardFrom': {
     'users': V;
   };
+  'TitleSuggestedPostAmountForAnyTime': {
+    'amount': V;
+  };
+  'ActionSuggestedPostIncoming': {
+    'user': V;
+  };
+  'ActionSuggestedChangesOutgoing': {
+    'changes': V;
+  };
+  'ActionSuggestedChangesIncoming': {
+    'user': V;
+    'changes': V;
+  };
+  'SuggestMessagePriceDescription': {
+    'currency': V;
+  };
+  'SuggestMessageTimeDescription': {
+    'hint': V;
+    'duration': V;
+  };
+  'ButtonOfferAmount': {
+    'amount': V;
+  };
+  'SuggestedPostPublishSchedule': {
+    'peer': V;
+    'date': V;
+  };
+  'SuggestedPostPublishScheduleYou': {
+    'peer': V;
+    'date': V;
+  };
+  'SuggestedPostPublished': {
+    'peer': V;
+    'date': V;
+  };
+  'SuggestedPostPublishedYou': {
+    'peer': V;
+    'date': V;
+  };
+  'SuggestedPostCharged': {
+    'user': V;
+    'amount': V;
+  };
+  'SuggestedPostChargedYou': {
+    'amount': V;
+  };
+  'SuggestedPostReceiveAmount': {
+    'peer': V;
+    'currency': V;
+    'duration': V;
+  };
+  'SuggestedPostReceiveAmountYou': {
+    'peer': V;
+    'currency': V;
+    'duration': V;
+  };
+  'SuggestedPostRefund': {
+    'peer': V;
+    'duration': V;
+  };
+  'SuggestedPostRefundYou': {
+    'peer': V;
+    'duration': V;
+    'currency': V;
+  };
+  'SuggestedPostBalanceTooLow': {
+    'peer': V;
+    'currency': V;
+  };
+  'SuggestedPostRefundedByUser': {
+    'channel': V;
+    'amount': V;
+    'user': V;
+  };
+  'SuggestedPostRefundedByChannel': {
+    'amount': V;
+    'peer': V;
+    'channel': V;
+  };
+  'DeclinePostDialogQuestion': {
+    'sender': V;
+  };
+  'SuggestedPostRejected': {
+    'peer': V;
+  };
+  'SuggestedPostRejectedWithReason': {
+    'peer': V;
+  };
+  'SuggestedPostRejectedComment': {
+    'comment': V;
+  };
+  'ActionSuggestedPostSuccess': {
+    'channel': V;
+    'amount': V;
+  };
+  'DescriptionSuggestedPostMinimumOffer': {
+    'amount': V;
+  };
+  'SuggestedPostConfirmMessage': {
+    'peer': V;
+  };
+  'SuggestedPostConfirmDetailsAdmin': {
+    'amount': V;
+    'commission': V;
+    'duration': V;
+  };
+  'SuggestedPostConfirmDetailsUser': {
+    'amount': V;
+    'commission': V;
+    'duration': V;
+  };
+  'SuggestedPostConfirmDetailsWithTimeAdmin': {
+    'amount': V;
+    'commission': V;
+    'time': V;
+    'duration': V;
+  };
+  'SuggestedPostConfirmDetailsWithTimeUser': {
+    'amount': V;
+    'commission': V;
+    'time': V;
+    'duration': V;
+  };
+  'ButtonPublishAtTime': {
+    'time': V;
+  };
+  'TitleUserToDoList': {
+    'peer': V;
+  };
+  'DescriptionCompletedToDoTasks': {
+    'number': V;
+    'count': V;
+  };
+  'MessageActionTodoCompletionsAsDone': {
+    'peer': V;
+    'task': V;
+  };
+  'MessageActionTodoCompletionsAsDoneYou': {
+    'task': V;
+  };
+  'MessageActionTodoCompletionsAsDoneMultiple': {
+    'peer': V;
+    'tasks': V;
+  };
+  'MessageActionTodoCompletionsAsDoneMultipleYou': {
+    'tasks': V;
+  };
+  'MessageActionTodoCompletionsAsNotDone': {
+    'peer': V;
+    'task': V;
+  };
+  'MessageActionTodoCompletionsAsNotDoneYou': {
+    'task': V;
+  };
+  'MessageActionTodoCompletionsAsNotDoneMultiple': {
+    'peer': V;
+    'tasks': V;
+  };
+  'MessageActionTodoCompletionsAsNotDoneMultipleYou': {
+    'tasks': V;
+  };
+  'MessageActionAppendTodo': {
+    'peer': V;
+    'task': V;
+    'list': V;
+  };
+  'MessageActionAppendTodoYou': {
+    'task': V;
+    'list': V;
+  };
+  'MessageActionAppendTodoMultiple': {
+    'peer': V;
+    'tasks': V;
+    'list': V;
+  };
+  'MessageActionAppendTodoMultipleYou': {
+    'tasks': V;
+    'list': V;
+  };
+  'HintTodoListTasksCount': {
+    'count': V;
+  };
+  'GiftInfoCollectibleBy': {
+    'number': V;
+    'owner': V;
+  };
 }
 
 export interface LangPairPlural {
@@ -2828,6 +3067,9 @@ export interface LangPairPluralWithVariables<V = LangVariable> {
     'count': V;
   };
   'GiftAttributeSymbolPlural': {
+    'count': V;
+  };
+  'MessageActionTodoTaskCount': {
     'count': V;
   };
 }

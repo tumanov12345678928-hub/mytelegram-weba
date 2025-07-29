@@ -20,6 +20,7 @@ import type {
   ApiMessage,
   ApiMissingInvitedUser,
   ApiMyBoost,
+  ApiNewMediaTodo,
   ApiNewPoll,
   ApiNotification,
   ApiPaymentFormRegular,
@@ -141,6 +142,7 @@ export type TabState = {
     gif?: ApiVideo;
     sticker?: ApiSticker;
     poll?: ApiNewPoll;
+    todo?: ApiNewMediaTodo;
     isSilent?: boolean;
     sendGrouped?: boolean;
     sendCompressed?: boolean;
@@ -530,6 +532,12 @@ export type TabState = {
     isQuiz?: boolean;
   };
 
+  todoListModal?: {
+    chatId: string;
+    messageId?: number;
+    forNewTask?: boolean;
+  };
+
   preparedMessageModal?: {
     message: ApiPreparedInlineMessage;
     webAppKey: string;
@@ -746,6 +754,16 @@ export type TabState = {
   };
 
   paidReactionModal?: {
+    chatId: string;
+    messageId: number;
+  };
+
+  suggestMessageModal?: {
+    chatId: string;
+    messageId?: number;
+  };
+
+  suggestedPostApprovalModal?: {
     chatId: string;
     messageId: number;
   };
