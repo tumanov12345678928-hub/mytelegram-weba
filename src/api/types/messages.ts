@@ -9,7 +9,7 @@ import type { ApiMessageAction } from './messageActions';
 import type {
   ApiLabeledPrice,
 } from './payments';
-import type { ApiStarGiftUnique } from './stars';
+import type { ApiStarGiftUnique, ApiStarsAmount } from './stars';
 import type {
   ApiMessageStoryData, ApiStory, ApiWebPageStickerData, ApiWebPageStoryData,
 } from './stories';
@@ -332,6 +332,34 @@ export type ApiNewPoll = {
   };
 };
 
+export interface ApiTodoItem {
+  id: number;
+  title: ApiFormattedText;
+}
+
+export interface ApiTodoList {
+  title: ApiFormattedText;
+  items: ApiTodoItem[];
+  othersCanAppend?: boolean;
+  othersCanComplete?: boolean;
+}
+
+export interface ApiTodoCompletion {
+  itemId: number;
+  completedBy: string;
+  completedAt: number;
+}
+
+export interface ApiMediaTodo {
+  mediaType: 'todo';
+  todo: ApiTodoList;
+  completions?: ApiTodoCompletion[];
+}
+
+export type ApiNewMediaTodo = {
+  todo: ApiTodoList;
+};
+
 export interface ApiWebPage {
   mediaType: 'webpage';
   id: number;
@@ -384,10 +412,24 @@ export interface ApiInputMessageReplyInfo {
   quoteOffset?: number;
 }
 
+export interface ApiSuggestedPost {
+  isAccepted?: true;
+  isRejected?: true;
+  price?: ApiStarsAmount;
+  scheduleDate?: number;
+}
+
 export interface ApiInputStoryReplyInfo {
   type: 'story';
   peerId: string;
   storyId: number;
+}
+
+export interface ApiInputSuggestedPostInfo {
+  price?: ApiStarsAmount;
+  scheduleDate?: number;
+  isAccepted?: true;
+  isRejected?: true;
 }
 
 export type ApiInputReplyInfo = ApiInputMessageReplyInfo | ApiInputStoryReplyInfo;
@@ -516,6 +558,7 @@ export type MediaContent = {
   sticker?: ApiSticker;
   contact?: ApiContact;
   pollId?: string;
+  todo?: ApiMediaTodo;
   action?: ApiMessageAction;
   webPage?: ApiWebPage;
   audio?: ApiAudio;
@@ -548,6 +591,7 @@ export interface ApiMessage {
   isOutgoing: boolean;
   senderId?: string;
   replyInfo?: ApiReplyInfo;
+  suggestedPostInfo?: ApiInputSuggestedPostInfo;
   sendingState?: 'messageSendingStatePending' | 'messageSendingStateFailed';
   forwardInfo?: ApiMessageForwardInfo;
   isDeleting?: boolean;
@@ -837,6 +881,13 @@ interface ApiKeyboardButtonCopy {
   copyText: string;
 }
 
+export interface ApiKeyboardButtonSuggestedMessage {
+  type: 'suggestedMessage';
+  text: string;
+  buttonType: 'approve' | 'decline' | 'suggestChanges';
+  disabled?: boolean;
+}
+
 export type ApiKeyboardButton = (
   ApiKeyboardButtonSimple
   | ApiKeyboardButtonReceipt
@@ -849,6 +900,7 @@ export type ApiKeyboardButton = (
   | ApiKeyboardButtonSimpleWebView
   | ApiKeyboardButtonUrlAuth
   | ApiKeyboardButtonCopy
+  | ApiKeyboardButtonSuggestedMessage
 );
 
 export type ApiKeyboardButtons = ApiKeyboardButton[][];

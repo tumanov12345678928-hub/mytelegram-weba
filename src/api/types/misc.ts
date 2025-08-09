@@ -252,7 +252,17 @@ export interface ApiAppConfig {
   starsStargiftResaleAmountMin?: number;
   starsStargiftResaleAmountMax?: number;
   starsStargiftResaleCommissionPermille?: number;
+  starsSuggestedPostAmountMax?: number;
+  starsSuggestedPostAmountMin?: number;
+  starsSuggestedPostCommissionPermille?: number;
+  starsSuggestedPostAgeMin?: number;
+  starsSuggestedPostFutureMax?: number;
+  starsSuggestedPostFutureMin?: number;
+  tonSuggestedPostCommissionPermille?: number;
   pollMaxAnswers?: number;
+  todoItemsMax?: number;
+  todoTitleLengthMax?: number;
+  todoItemLengthMax?: number;
 }
 
 export interface ApiConfig {

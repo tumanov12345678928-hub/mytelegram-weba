@@ -9,6 +9,9 @@ import {
   SERVICE_NOTIFICATIONS_USER_ID,
   STORY_EXPIRE_PERIOD,
   STORY_VIEWERS_EXPIRE_PERIOD,
+  TODO_ITEM_LENGTH_LIMIT,
+  TODO_ITEMS_LIMIT,
+  TODO_TITLE_LENGTH_LIMIT,
 } from '../../../config';
 import localDb from '../localDb';
 import { buildJson } from './misc';
@@ -98,7 +101,17 @@ export interface GramJsAppConfig extends LimitsConfig {
   stars_stargift_resale_amount_max?: number;
   stars_stargift_resale_amount_min?: number;
   stars_stargift_resale_commission_permille?: number;
+  stars_suggested_post_amount_max?: number;
+  stars_suggested_post_amount_min?: number;
+  stars_suggested_post_commission_permille?: number;
+  stars_suggested_post_age_min?: number;
+  stars_suggested_post_future_max?: number;
+  stars_suggested_post_future_min?: number;
+  ton_suggested_post_commission_permille?: number;
   poll_answers_max?: number;
+  todo_items_max?: number;
+  todo_title_length_max?: number;
+  todo_item_length_max?: number;
 }
 
 function buildEmojiSounds(appConfig: GramJsAppConfig) {
@@ -199,6 +212,16 @@ export function buildAppConfig(json: GramJs.TypeJSONValue, hash: number): ApiApp
     starsStargiftResaleAmountMin: appConfig.stars_stargift_resale_amount_min,
     starsStargiftResaleAmountMax: appConfig.stars_stargift_resale_amount_max,
     starsStargiftResaleCommissionPermille: appConfig.stars_stargift_resale_commission_permille,
+    starsSuggestedPostAmountMax: appConfig.stars_suggested_post_amount_max,
+    starsSuggestedPostAmountMin: appConfig.stars_suggested_post_amount_min,
+    starsSuggestedPostCommissionPermille: appConfig.stars_suggested_post_commission_permille,
+    starsSuggestedPostAgeMin: appConfig.stars_suggested_post_age_min,
+    starsSuggestedPostFutureMax: appConfig.stars_suggested_post_future_max,
+    starsSuggestedPostFutureMin: appConfig.stars_suggested_post_future_min,
+    tonSuggestedPostCommissionPermille: appConfig.ton_suggested_post_commission_permille,
     pollMaxAnswers: appConfig.poll_answers_max,
+    todoItemsMax: appConfig.todo_items_max ?? TODO_ITEMS_LIMIT,
+    todoTitleLengthMax: appConfig.todo_title_length_max ?? TODO_TITLE_LENGTH_LIMIT,
+    todoItemLengthMax: appConfig.todo_item_length_max ?? TODO_ITEM_LENGTH_LIMIT,
   };
 }

@@ -65,7 +65,7 @@ export const MEDIA_PROGRESSIVE_CACHE_DISABLED = false;
 export const MEDIA_PROGRESSIVE_CACHE_NAME = 'tt-media-progressive';
 export const MEDIA_CACHE_MAX_BYTES = 512 * 1024; // 512 KB
 export const CUSTOM_BG_CACHE_NAME = 'tt-custom-bg';
-export const LANG_CACHE_NAME = 'tt-lang-packs-v49';
+export const LANG_CACHE_NAME = 'tt-lang-packs-v50';
 export const ASSET_CACHE_NAME = 'tt-assets';
 export const AUTODOWNLOAD_FILESIZE_MB_LIMITS = [1, 5, 10, 50, 100, 500];
 export const DATA_BROADCAST_CHANNEL_PREFIX = 'tt-global';
@@ -106,6 +106,18 @@ export const STORY_LIST_LIMIT = 100;
 export const API_GENERAL_ID_LIMIT = 100;
 export const STATISTICS_PUBLIC_FORWARDS_LIMIT = 50;
 export const RESALE_GIFTS_LIMIT = 50;
+export const TODO_ITEMS_LIMIT = 30;
+export const TODO_TITLE_LENGTH_LIMIT = 32;
+export const TODO_ITEM_LENGTH_LIMIT = 64;
+
+// Suggested Posts defaults
+export const STARS_SUGGESTED_POST_AMOUNT_MAX = 100000;
+export const STARS_SUGGESTED_POST_AMOUNT_MIN = 5;
+export const STARS_SUGGESTED_POST_COMMISSION_PERMILLE = 850;
+export const STARS_SUGGESTED_POST_AGE_MIN = 86400; // 24 hours in seconds
+export const STARS_SUGGESTED_POST_FUTURE_MAX = 2678400; // 31 days in seconds
+export const STARS_SUGGESTED_POST_FUTURE_MIN = 300; // 5 minutes in seconds
+export const TON_SUGGESTED_POST_COMMISSION_PERMILLE = 850;
 
 export const STORY_VIEWS_MIN_SEARCH = 15;
 export const STORY_MIN_REACTIONS_SORT = 10;
@@ -429,6 +441,7 @@ export const PREMIUM_FEATURE_SECTIONS = [
   'last_seen',
   'message_privacy',
   'effects',
+  'todo',
 ] as const;
 
 export const PREMIUM_BOTTOM_VIDEOS: ApiPremiumSection[] = [
@@ -444,6 +457,7 @@ export const PREMIUM_BOTTOM_VIDEOS: ApiPremiumSection[] = [
   'last_seen',
   'message_privacy',
   'effects',
+  'todo',
 ];
 
 export const PREMIUM_LIMITS_ORDER: ApiLimitTypeForPromo[] = [
