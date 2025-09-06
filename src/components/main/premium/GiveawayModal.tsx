@@ -62,7 +62,7 @@ import GiftBlueRound from '../../../assets/premium/GiftBlueRound.svg';
 import GiftGreenRound from '../../../assets/premium/GiftGreenRound.svg';
 import GiftRedRound from '../../../assets/premium/GiftRedRound.svg';
 import GiftStar from '../../../assets/premium/GiftStar.svg';
-import PremiumLogo from '../../../assets/premium/PremiumLogo.svg';
+import PremiumLogo from '../../../assets/premium/PremiumStar.svg';
 
 export type OwnProps = {
   isOpen?: boolean;
@@ -919,10 +919,10 @@ export default memo(withGlobal<OwnProps>((global): StateProps => {
     gifts: giveawayModal?.gifts,
     selectedMemberList: giveawayModal?.selectedMemberIds,
     selectedChannelList: giveawayModal?.selectedChannelIds,
-    giveawayBoostPerPremiumLimit: global.appConfig?.giveawayBoostsPerPremium,
-    isStarsGiftEnabled: global.appConfig?.isStarsGiftEnabled,
-    userSelectionLimit: global.appConfig?.giveawayAddPeersMax,
-    countrySelectionLimit: global.appConfig?.giveawayCountriesMax,
+    giveawayBoostPerPremiumLimit: global.appConfig.giveawayBoostsPerPremium,
+    isStarsGiftEnabled: global.appConfig.isStarsGiftEnabled,
+    userSelectionLimit: global.appConfig.giveawayAddPeersMax,
+    countrySelectionLimit: global.appConfig.giveawayCountriesMax,
     countryList: global.countryList.general,
     prepaidGiveaway: giveawayModal?.prepaidGiveaway,
     isChannel,

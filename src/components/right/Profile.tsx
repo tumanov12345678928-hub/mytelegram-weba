@@ -1,9 +1,6 @@
-import type { FC } from '../../lib/teact/teact';
-import {
-  memo, useCallback,
-  useEffect, useMemo, useRef, useState,
-} from '../../lib/teact/teact';
-import { getActions, withGlobal } from '../../global';
+import type { FC } from '@teact';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from '@teact';
+import { getActions, getGlobal, withGlobal } from '../../global';
 
 import type {
   ApiBotPreviewMedia,
@@ -16,25 +13,17 @@ import type {
   ApiUserStatus,
 } from '../../api/types';
 import type { TabState } from '../../global/types';
-import type {
-  ProfileState, ProfileTabType, SharedMediaType, ThemeKey, ThreadId,
-} from '../../types';
+import type { AnimationLevel, ProfileState, ProfileTabType, SharedMediaType, ThemeKey, ThreadId } from '../../types';
 import type { RegularLangKey } from '../../types/language';
 import { MAIN_THREAD_ID } from '../../api/types';
 import { AudioOrigin, MediaViewerOrigin, NewChatMembersProgress } from '../../types';
 
-import {
-  MEMBERS_SLICE,
-  PROFILE_SENSITIVE_AREA,
-  SHARED_MEDIA_SLICE,
-  SLIDE_TRANSITION_DURATION,
-} from '../../config';
+import { MEMBERS_SLICE, PROFILE_SENSITIVE_AREA, SHARED_MEDIA_SLICE, SLIDE_TRANSITION_DURATION } from '../../config';
 import {
   getHasAdminRight,
   getIsDownloading,
   getIsSavedDialog,
   getMessageDocument,
-  getMessageDownloadableMedia,
   isChatAdmin,
   isChatChannel,
   isChatGroup,
@@ -48,6 +37,7 @@ import {
   selectChatFullInfo,
   selectChatMessages,
   selectCurrentSharedMediaSearch,
+  selectIsChatRestricted,
   selectIsCurrentUserPremium,
   selectIsRightColumnShown,
   selectMonoforumChannel,
@@ -61,11 +51,13 @@ import {
   selectUserFullInfo,
 } from '../../global/selectors';
 import { selectPremiumLimit } from '../../global/selectors/limits';
+import { selectMessageDownloadableMedia } from '../../global/selectors/media';
 import { selectSharedSettings } from '../../global/selectors/sharedState';
 import { IS_TOUCH_ENV } from '../../util/browser/windowEnvironment';
 import buildClassName from '../../util/buildClassName';
 import { captureEvents, SwipeDirection } from '../../util/captureEvents';
 import { isUserId } from '../../util/entities/ids';
+import { resolveTransitionName } from '../../util/resolveTransitionName.ts';
 import { LOCAL_TGS_URLS } from '../common/helpers/animatedAssets';
 import renderText from '../common/helpers/renderText';
 import { getSenderName } from '../left/search/helpers/getSenderName';
@@ -153,7 +145,8 @@ type StateProps = {
   activeDownloads: TabState['activeDownloads'];
   isChatProtected?: boolean;
   nextProfileTab?: ProfileTabType;
-  shouldWarnAboutSvg?: boolean;
+  animationLevel: AnimationLevel;
+  shouldWarnAboutFiles?: boolean;
   similarChannels?: string[];
   similarBots?: string[];
   botPreviewMedia?: ApiBotPreviewMedia[];
@@ -218,7 +211,8 @@ const Profile: FC<OwnProps & StateProps> = ({
   activeDownloads,
   isChatProtected,
   nextProfileTab,
-  shouldWarnAboutSvg,
+  animationLevel,
+  shouldWarnAboutFiles,
   similarChannels,
   similarBots,
   isCurrentUserPremium,
@@ -587,8 +581,19 @@ const Profile: FC<OwnProps & StateProps> = ({
       );
     }
 
-    if ((!viewportIds && !botPreviewMedia) || !canRenderContent || !messagesById) {
-      const noSpinner = isFirstTab && !canRenderContent;
+    const noContent = (!viewportIds && !botPreviewMedia) || !canRenderContent || !messagesById;
+    const noSpinner = isFirstTab && !canRenderContent;
+    const isSpinner = noContent && !noSpinner;
+
+    return (
+      <Transition activeKey={isSpinner ? 0 : 1} name="fade" shouldCleanup>
+        {renderSpinnerOrContent(noContent, noSpinner)}
+      </Transition>
+    );
+  }
+
+  function renderSpinnerOrContent(noContent: boolean, noSpinner: boolean) {
+    if (noContent) {
       const forceRenderHiddenMembers = Boolean(resultType === 'members' && areMembersHidden);
 
       return (
@@ -646,6 +651,11 @@ const Profile: FC<OwnProps & StateProps> = ({
       );
     }
 
+    if (!messagesById) {
+      // A TypeScript assertion, should never be really reached
+      return;
+    }
+
     return (
       <div
         className={`content ${resultType}-list`}
@@ -683,7 +693,7 @@ const Profile: FC<OwnProps & StateProps> = ({
               observeIntersection={observeIntersectionForMedia}
               onDateClick={handleMessageFocus}
               message={messagesById[id]}
-              shouldWarnAboutSvg={shouldWarnAboutSvg}
+              shouldWarnAboutFiles={shouldWarnAboutFiles}
             />
           ))
         ) : resultType === 'links' ? (
@@ -713,21 +723,23 @@ const Profile: FC<OwnProps & StateProps> = ({
           ))
         ) : resultType === 'voice' ? (
           (viewportIds as number[]).map((id) => {
+            const global = getGlobal();
             const message = messagesById[id];
             if (!message) return undefined;
-            const media = messagesById[id] && getMessageDownloadableMedia(message)!;
+
+            const media = selectMessageDownloadableMedia(global, message)!;
             return messagesById[id] && (
               <Audio
                 key={id}
                 theme={theme}
-                message={messagesById[id]}
-                senderTitle={getSenderName(oldLang, messagesById[id], chatsById, usersById)}
+                message={message}
+                senderTitle={getSenderName(oldLang, message, chatsById, usersById)}
                 origin={AudioOrigin.SharedMedia}
-                date={messagesById[id].date}
+                date={message.date}
                 className="scroll-item"
                 onPlay={handlePlayAudio}
                 onDateClick={handleMessageFocus}
-                canDownload={!isChatProtected && !messagesById[id].isProtected}
+                canDownload={!isChatProtected && !message.isProtected}
                 isDownloading={getIsDownloading(activeDownloads, media)}
               />
             );
@@ -787,7 +799,7 @@ const Profile: FC<OwnProps & StateProps> = ({
             {!isCurrentUserPremium && (
               <>
                 {}
-                <Button className="show-more-channels" size="smaller" onClick={() => openPremiumModal()}>
+                <Button className="show-more-channels" onClick={() => openPremiumModal()}>
                   {oldLang('UnlockSimilar')}
                   <Icon name="unlock-badge" />
                 </Button>
@@ -826,7 +838,7 @@ const Profile: FC<OwnProps & StateProps> = ({
             {!isCurrentUserPremium && (
               <>
                 {}
-                <Button className="show-more-bots" size="smaller" onClick={() => openPremiumModal()}>
+                <Button className="show-more-bots" onClick={() => openPremiumModal()}>
                   {lang('UnlockMoreSimilarBots')}
                   <Icon name="unlock-badge" />
                 </Button>
@@ -857,7 +869,7 @@ const Profile: FC<OwnProps & StateProps> = ({
     );
   }
 
-  const activeListSelector = `.shared-media-transition > .Transition_slide-active.${resultType}-list`;
+  const activeListSelector = `.shared-media-transition > .Transition_slide-active .${resultType}-list`;
   const itemSelector = `${activeListSelector} > .scroll-item`;
 
   return (
@@ -889,7 +901,7 @@ const Profile: FC<OwnProps & StateProps> = ({
         >
           <Transition
             ref={transitionRef}
-            name={oldLang.isRtl ? 'slideOptimizedRtl' : 'slideOptimized'}
+            name={resolveTransitionName('slideOptimized', animationLevel, undefined, oldLang.isRtl)}
             activeKey={activeKey}
             renderCount={tabs.length}
             shouldRestoreHeight
@@ -943,7 +955,7 @@ export default memo(withGlobal<OwnProps>(
     const userFullInfo = selectUserFullInfo(global, chatId);
     const messagesById = selectChatMessages(global, chatId);
 
-    const { shouldWarnAboutSvg } = selectSharedSettings(global);
+    const { animationLevel, shouldWarnAboutFiles } = selectSharedSettings(global);
 
     const { currentType: mediaSearchType, resultsByType } = selectCurrentSharedMediaSearch(global) || {};
     const { foundIds } = (resultsByType && mediaSearchType && resultsByType[mediaSearchType]) || {};
@@ -995,6 +1007,7 @@ export default memo(withGlobal<OwnProps>(
     const peerGifts = selectTabState(global).savedGifts.giftsByPeerId[chatId];
 
     const monoforumChannel = selectMonoforumChannel(global, chatId);
+    const isRestricted = chat && selectIsChatRestricted(global, chat.id);
 
     return {
       theme: selectTheme(global),
@@ -1012,7 +1025,7 @@ export default memo(withGlobal<OwnProps>(
       canDeleteMembers,
       currentUserId: global.currentUserId,
       isRightColumnShown: selectIsRightColumnShown(global, isMobile),
-      isRestricted: chat?.isRestricted,
+      isRestricted,
       activeDownloads,
       usersById,
       userStatusesById,
@@ -1026,7 +1039,8 @@ export default memo(withGlobal<OwnProps>(
       isChatProtected: chat?.isProtected,
       nextProfileTab: selectTabState(global).nextProfileTab,
       forceScrollProfileTab: selectTabState(global).forceScrollProfileTab,
-      shouldWarnAboutSvg,
+      animationLevel,
+      shouldWarnAboutFiles,
       similarChannels: similarChannelIds,
       similarBots: similarBotsIds,
       botPreviewMedia,

@@ -54,8 +54,10 @@ noscript {
 
   width: 100%;
   height: 100%;
+
   .nojs-video {
     pointer-events: none;
+
     &::-webkit-media-controls {
       display: none;
     }
@@ -265,6 +267,20 @@ body:not(.is-ios) {
   }
 }
 
+.interactive-gift {
+  canvas {
+    transition: 250ms transform;
+  }
+
+  @media (hover: hover) {
+    &:hover, &:focus-visible {
+      canvas {
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
 .color-primary {
   color: var(--color-primary) !important;
 }
@@ -318,10 +334,12 @@ body:not(.is-ios) {
 }
 
 // Increase specificity to override the default icon style
+.ton-amount-icon.ton-amount-icon,
 .star-amount-icon.star-amount-icon {
   margin-inline-start: 0.375em; // Prevent sticking to the text without using `white-space: pre`
   margin-inline-end: 0.2em; // Prevent sticking to the text without using `white-space: pre`
   line-height: inherit; // Vertical centring
+  vertical-align: text-bottom; // As regular text
 }
 
 .shared-canvas-container {
@@ -339,6 +357,31 @@ body:not(.is-ios) {
 
   width: 100%;
   height: 100%;
+}
+
+.with-notch {
+  &::before {
+    content: "";
+
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 1px;
+
+    opacity: 0;
+    background-color: var(--color-borders);
+
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  &.scrolled {
+    &::before {
+      opacity: 1;
+    }
+  }
 }
 
 @keyframes grow-icon {

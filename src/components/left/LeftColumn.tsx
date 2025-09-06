@@ -1,22 +1,25 @@
 import type {
-  ElementRef } from '../../lib/teact/teact';
+  ElementRef } from '@teact';
 import {
   memo, useEffect, useMemo, useState,
-} from '../../lib/teact/teact';
+} from '@teact';
 import { getActions, withGlobal } from '../../global';
 
 import type { GlobalState } from '../../global/types';
 import type { FoldersActions } from '../../hooks/reducers/useFoldersReducer';
 import type { ReducerAction } from '../../hooks/useReducer';
-import { LeftColumnContent, SettingsScreens } from '../../types';
+import { type AnimationLevel, LeftColumnContent, SettingsScreens } from '../../types';
 
 import {
   selectCurrentChat, selectIsCurrentUserFrozen, selectIsForumPanelOpen, selectTabState,
 } from '../../global/selectors';
+import { selectSharedSettings } from '../../global/selectors/sharedState.ts';
 import {
-  IS_APP, IS_FIREFOX, IS_MAC_OS, IS_TOUCH_ENV, LAYERS_ANIMATION_NAME,
+  IS_APP, IS_FIREFOX, IS_MAC_OS, IS_TOUCH_ENV,
 } from '../../util/browser/windowEnvironment';
 import captureEscKeyListener from '../../util/captureEscKeyListener';
+import { resolveTransitionName } from '../../util/resolveTransitionName.ts';
+import { debounce } from '../../util/schedulers';
 import { captureControlledSwipe } from '../../util/swipeController';
 
 import useFoldersReducer from '../../hooks/reducers/useFoldersReducer';
@@ -44,6 +47,7 @@ type StateProps = {
   searchQuery?: string;
   searchDate?: number;
   isFirstChatFolderActive: boolean;
+  animationLevel: AnimationLevel;
   shouldSkipHistoryAnimations?: boolean;
   currentUserId?: string;
   hasPasscode?: boolean;
@@ -80,6 +84,7 @@ function LeftColumn({
   searchQuery,
   searchDate,
   isFirstChatFolderActive,
+  animationLevel,
   shouldSkipHistoryAnimations,
   currentUserId,
   hasPasscode,
@@ -109,6 +114,10 @@ function LeftColumn({
 
   const [contactsFilter, setContactsFilter] = useState<string>('');
   const [foldersState, foldersDispatch] = useFoldersReducer();
+
+  const debouncedSetGlobalSearchQuery = useMemo(() => debounce((query: string) => {
+    setGlobalSearchQuery({ query });
+  }, 200, false, true), [setGlobalSearchQuery]);
 
   // Used to reset child components in background.
   const [lastResetTime, setLastResetTime] = useState<number>(0);
@@ -375,7 +384,7 @@ function LeftColumn({
     openLeftColumnContent({ contentKey: LeftColumnContent.GlobalSearch });
 
     if (query !== searchQuery) {
-      setGlobalSearchQuery({ query });
+      debouncedSetGlobalSearchQuery(query);
     }
   });
 
@@ -496,6 +505,7 @@ function LeftColumn({
             currentScreen={settingsScreen}
             foldersState={foldersState}
             foldersDispatch={foldersDispatch}
+            animationLevel={animationLevel}
             shouldSkipTransition={shouldSkipHistoryAnimations}
             onReset={handleReset}
           />
@@ -507,6 +517,7 @@ function LeftColumn({
             isActive={isActive}
             isChannel
             content={contentKey}
+            animationLevel={animationLevel}
             onReset={handleReset}
           />
         );
@@ -516,6 +527,7 @@ function LeftColumn({
             key={lastResetTime}
             isActive={isActive}
             content={contentKey}
+            animationLevel={animationLevel}
             onReset={handleReset}
           />
         );
@@ -544,7 +556,7 @@ function LeftColumn({
   return (
     <Transition
       ref={ref}
-      name={shouldSkipHistoryAnimations ? 'none' : LAYERS_ANIMATION_NAME}
+      name={resolveTransitionName('layers', animationLevel, shouldSkipHistoryAnimations)}
       renderCount={RENDER_COUNT}
       activeKey={contentType}
       shouldCleanup
@@ -585,6 +597,7 @@ export default memo(withGlobal<OwnProps>(
       archiveSettings,
     } = global;
 
+    const { animationLevel } = selectSharedSettings(global);
     const currentChat = selectCurrentChat(global);
     const isChatOpen = Boolean(currentChat?.id);
     const isForumPanelOpen = selectIsForumPanelOpen(global);
@@ -595,6 +608,7 @@ export default memo(withGlobal<OwnProps>(
       searchQuery: query,
       searchDate: minDate,
       isFirstChatFolderActive: activeChatFolder === 0,
+      animationLevel,
       shouldSkipHistoryAnimations,
       currentUserId,
       hasPasscode,

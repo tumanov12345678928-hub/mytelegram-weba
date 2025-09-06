@@ -14,6 +14,7 @@ import {
 import { getIsChatMuted } from '../global/helpers/notifications';
 import {
   selectChatLastMessage,
+  selectIsChatRestricted,
   selectNotifyDefaults,
   selectTabState,
   selectTopics,
@@ -174,6 +175,10 @@ export function getAllNotificationsCount() {
 export function getOrderKey(chatId: string, isForSaved?: boolean) {
   const summary = prepared.chatSummariesById.get(chatId)!;
   return isForSaved ? summary.orderInSaved : summary.orderInAll;
+}
+
+export function getChatFolderIds(chatId: string) {
+  return prepared.folderIdsByChatId[chatId];
 }
 
 /* Callback managers */
@@ -527,10 +532,11 @@ function buildChatSummary<T extends GlobalState>(
   isRemovedFromSaved?: boolean,
 ): ChatSummary {
   const {
-    id, type, isRestricted, isNotJoined, migratedTo, folderId,
+    id, type, isNotJoined, migratedTo, folderId,
     unreadCount: chatUnreadCount, unreadMentionsCount: chatUnreadMentionsCount, hasUnreadMark,
     isForum,
   } = chat;
+  const isRestricted = selectIsChatRestricted(global, id);
   const topics = selectTopics(global, chat.id);
 
   const { unreadCount, unreadMentionsCount } = isForum

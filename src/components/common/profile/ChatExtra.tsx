@@ -2,7 +2,7 @@ import type { FC } from '../../../lib/teact/teact';
 import {
   memo, useMemo,
 } from '../../../lib/teact/teact';
-import { getActions, withGlobal } from '../../../global';
+import { getActions, getGlobal, withGlobal } from '../../../global';
 
 import type {
   ApiBotVerification,
@@ -29,6 +29,7 @@ import {
   selectChat,
   selectChatFullInfo,
   selectCurrentMessageList,
+  selectIsChatRestricted,
   selectNotifyDefaults,
   selectNotifyException,
   selectTopicLink,
@@ -273,7 +274,8 @@ const ChatExtra: FC<OwnProps & StateProps> = ({
     ),
   }, { withNodes: true });
 
-  if (chat?.isRestricted || (isSelf && !isInSettings)) {
+  const isRestricted = chatId ? selectIsChatRestricted(getGlobal(), chatId) : false;
+  if (isRestricted || (isSelf && !isInSettings)) {
     return undefined;
   }
 
@@ -403,7 +405,6 @@ const ChatExtra: FC<OwnProps & StateProps> = ({
         >
           <Button
             className={styles.openAppButton}
-            size="smaller"
             onClick={handleOpenApp}
           >
             {oldLang('ProfileBotOpenApp')}

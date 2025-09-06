@@ -22,6 +22,7 @@ import {
   selectChat,
   selectChatFullInfo,
   selectIsChatBotNotStarted,
+  selectIsChatRestricted,
   selectIsChatWithSelf,
   selectIsCurrentUserFrozen,
   selectIsInSelectMode,
@@ -330,7 +331,7 @@ const HeaderActions: FC<OwnProps & StateProps> = ({
         <>
           {canExpandActions && !shouldSendJoinRequest && (canSubscribe || shouldJoinToSend) && (
             <Button
-              size="tiny"
+              size="smaller"
               ripple
               fluid
               onClick={handleSubscribeClick}
@@ -340,7 +341,7 @@ const HeaderActions: FC<OwnProps & StateProps> = ({
           )}
           {canExpandActions && shouldSendJoinRequest && (
             <Button
-              size="tiny"
+              size="smaller"
               ripple
               fluid
               onClick={handleSubscribeClick}
@@ -350,7 +351,7 @@ const HeaderActions: FC<OwnProps & StateProps> = ({
           )}
           {canExpandActions && canStartBot && (
             <Button
-              size="tiny"
+              size="smaller"
               ripple
               fluid
               onClick={handleStartBot}
@@ -370,7 +371,7 @@ const HeaderActions: FC<OwnProps & StateProps> = ({
           )}
           {canExpandActions && canUnblock && (
             <Button
-              size="tiny"
+              size="smaller"
               ripple
               fluid
               onClick={handleUnblock}
@@ -477,7 +478,8 @@ export default memo(withGlobal<OwnProps>(
     const isPrivate = isUserId(chatId);
     const { doNotTranslate } = global.settings.byKey;
 
-    if (!chat || chat.isRestricted || selectIsInSelectMode(global)) {
+    const isRestricted = selectIsChatRestricted(global, chatId);
+    if (!chat || isRestricted || selectIsInSelectMode(global)) {
       return {
         noMenu: true,
         language,

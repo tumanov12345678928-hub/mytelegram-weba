@@ -65,6 +65,9 @@ export default function createConfig(
       host: '0.0.0.0',
       allowedHosts: 'all',
       hot: false,
+      client: {
+        overlay: false,
+      },
       static: [
         {
           directory: path.resolve(__dirname, 'public'),
@@ -220,8 +223,8 @@ export default function createConfig(
         APP_VERSION: JSON.stringify(appVersion),
         APP_REVISION: DefinePlugin.runtimeValue(() => {
           const { branch, commit } = getGitMetadata();
-          const shouldDisplayCommit = APP_ENV === 'staging' || !branch || branch === 'HEAD';
-          return JSON.stringify(shouldDisplayCommit ? commit : branch);
+          const shouldDisplayOnlyCommit = APP_ENV === 'staging' || !branch || branch === 'HEAD';
+          return JSON.stringify(shouldDisplayOnlyCommit ? commit : `${branch}#${commit}`);
         }, mode === 'development' ? true : []),
       }),
       new ProvidePlugin({

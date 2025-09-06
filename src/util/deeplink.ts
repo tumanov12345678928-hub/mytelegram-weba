@@ -1,14 +1,14 @@
 import { getActions } from '../global';
 
-import type { ApiChatType, ApiFormattedText } from '../api/types';
+import type { ApiChatType, ApiFormattedText, LinkContext } from '../api/types';
 import type { DeepLinkMethod } from './deepLinkParser';
 import { LeftColumnContent, SettingsScreens } from '../types';
 
-import { API_CHAT_TYPES, RE_TG_LINK } from '../config';
+import { API_CHAT_TYPES, RE_TG_LINK, TON_CURRENCY_CODE } from '../config';
 import { IS_BAD_URL_PARSER } from './browser/globalEnvironment';
 import { tryParseDeepLink } from './deepLinkParser';
 
-export const processDeepLink = (url: string): boolean => {
+export const processDeepLink = (url: string, linkContext?: LinkContext): boolean => {
   const actions = getActions();
 
   const parsedLink = tryParseDeepLink(url);
@@ -21,6 +21,7 @@ export const processDeepLink = (url: string): boolean => {
           messageId: parsedLink.messageId,
           commentId: parsedLink.commentId,
           timestamp: parsedLink.timestamp,
+          linkContext,
         });
         return true;
       case 'publicMessageLink': {
@@ -30,6 +31,7 @@ export const processDeepLink = (url: string): boolean => {
           messageId: parsedLink.messageId,
           commentId: parsedLink.commentId,
           timestamp: parsedLink.timestamp,
+          linkContext,
         });
         return true;
       }
@@ -104,6 +106,9 @@ export const processDeepLink = (url: string): boolean => {
         return true;
       case 'stars':
         actions.openStarsBalanceModal({});
+        break;
+      case 'ton':
+        actions.openStarsBalanceModal({ currency: TON_CURRENCY_CODE });
         break;
       default:
         break;

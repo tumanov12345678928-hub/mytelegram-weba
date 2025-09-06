@@ -167,7 +167,6 @@ const AboutAdsModal = ({ modal, minLevelToRestrictAds }: OwnProps & StateProps) 
     >
       {regularAdContent}
       <Button
-        size="smaller"
         onClick={handleClose}
       >
         {oldLang('RevenueSharingAdsUnderstood')}
@@ -178,7 +177,7 @@ const AboutAdsModal = ({ modal, minLevelToRestrictAds }: OwnProps & StateProps) 
 
 export default memo(withGlobal<OwnProps>(
   (global): StateProps => {
-    const minLevelToRestrictAds = global.appConfig?.channelRestrictAdsLevelMin;
+    const minLevelToRestrictAds = global.appConfig.channelRestrictAdsLevelMin;
 
     return {
       minLevelToRestrictAds,

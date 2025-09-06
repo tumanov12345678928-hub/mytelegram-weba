@@ -1,3 +1,4 @@
+import { LinkContext } from './../../api/types/messages';
 import type {
   ApiAttachBot,
   ApiAttachment,
@@ -49,11 +50,13 @@ import type {
   ApiStickerSetInfo,
   ApiThemeParameters,
   ApiTodoItem,
+  ApiTypeCurrencyAmount,
   ApiTypePrepaidGiveaway,
   ApiUpdate,
   ApiUser,
   ApiVideo,
   BotsPrivacyType,
+  LinkContext,
   PrivacyVisibility,
 } from '../../api/types';
 import type { ApiEmojiStatusCollectible, ApiEmojiStatusType } from '../../api/types/users';
@@ -333,7 +336,7 @@ export interface ActionPayloads {
   deleteChatMember: {
     chatId: string;
     userId: string;
-  };
+  } & WithTabId;
   openPreviousChat: WithTabId | undefined;
   editChatFolders: {
     chatId: string;
@@ -395,6 +398,9 @@ export interface ActionPayloads {
   deleteChatFolder: {
     id: number;
   };
+  toggleDialogFilterTags: {
+    isEnabled: boolean;
+  };
   openSupportChat: WithTabId | undefined;
   openChatByPhoneNumber: {
     phoneNumber: string;
@@ -417,6 +423,9 @@ export interface ActionPayloads {
     shouldCheckFetchingMessagesStatus?: boolean;
   } & WithTabId;
   searchPopularBotApps: WithTabId | undefined;
+  checkSearchPostsFlood: {
+    query?: string;
+  } & WithTabId;
   addRecentlyFoundChatId: {
     id: string;
   };
@@ -499,6 +508,10 @@ export interface ActionPayloads {
       lastMessageId: number;
       isDeleting?: boolean;
     };
+  };
+  loadMessagesById: {
+    chatId: string;
+    messageIds: number[];
   };
   editMessage: {
     messageList?: MessageList;
@@ -641,6 +654,7 @@ export interface ActionPayloads {
   openTelegramLink: {
     url: string;
     shouldIgnoreCache?: boolean;
+    linkContext?: LinkContext;
   } & WithTabId;
   resolveBusinessChatLink: {
     slug: string;
@@ -655,12 +669,14 @@ export interface ActionPayloads {
     startAttach?: string;
     attach?: string;
     startApp?: string;
+    shouldStartMainApp?: boolean;
     mode?: string;
     choose?: ApiChatType[];
     text?: string;
     originalParts?: (string | undefined)[];
     timestamp?: number;
     onChatChanged?: CallbackAction;
+    linkContext?: LinkContext;
   } & WithTabId;
   processBoostParameters: {
     usernameOrId: string;
@@ -1080,6 +1096,8 @@ export interface ActionPayloads {
     days: number;
   } & WithTabId | undefined;
   closeDeleteAccountModal: WithTabId | undefined;
+  openAgeVerificationModal: WithTabId | undefined;
+  closeAgeVerificationModal: WithTabId | undefined;
   setAccountTTL: {
     days: number;
   } & WithTabId | undefined;
@@ -1188,6 +1206,7 @@ export interface ActionPayloads {
     messageId?: number;
     commentId?: number;
     timestamp?: number;
+    linkContext?: LinkContext;
   } & WithTabId;
   loadFullChat: {
     chatId: string;
@@ -1278,6 +1297,7 @@ export interface ActionPayloads {
   loadStarStatus: undefined;
   loadStarsTransactions: {
     type: StarsTransactionType;
+    isTon?: boolean;
   };
   loadStarsSubscriptions: undefined;
   changeStarsSubscription: {
@@ -1302,6 +1322,7 @@ export interface ActionPayloads {
       purpose?: string;
     };
     shouldIgnoreBalance?: boolean;
+    currency?: ApiTypeCurrencyAmount['currency'];
   } & WithTabId;
   closeStarsBalanceModal: WithTabId | undefined;
 
@@ -1561,7 +1582,7 @@ export interface ActionPayloads {
   loadPeerStoriesByIds: {
     peerId: string;
     storyIds: number[];
-  } & WithTabId;
+  };
   viewStory: {
     peerId: string;
     storyId: number;
@@ -2019,6 +2040,7 @@ export interface ActionPayloads {
   clickBotInlineButton: {
     chatId: string;
     messageId: number;
+    threadId?: ThreadId;
     button: ApiKeyboardButton;
   } & WithTabId;
   clickSuggestedMessageButton: {
@@ -2274,6 +2296,7 @@ export interface ActionPayloads {
     url: string;
     shouldSkipModal?: boolean;
     ignoreDeepLinks?: boolean;
+    linkContext?: LinkContext;
   } & WithTabId;
   openMapModal: {
     geoPoint: ApiGeoPoint;
@@ -2429,6 +2452,7 @@ export interface ActionPayloads {
     isSuccess?: boolean;
     isGift?: boolean;
     monthsAmount?: number;
+    gift?: ApiStarGift;
   } & WithTabId) | undefined;
   closePremiumModal: WithTabId | undefined;
 
@@ -2483,6 +2507,7 @@ export interface ActionPayloads {
   };
 
   loadPremiumGifts: undefined;
+  loadTonGifts: undefined;
   loadStarGifts: undefined;
   updateResaleGiftsFilter: {
     filter: ResaleGiftsFilterOptions;
@@ -2503,7 +2528,7 @@ export interface ActionPayloads {
   buyStarGift: {
     peerId: string;
     slug: string;
-    stars: number;
+    price: ApiTypeCurrencyAmount;
   } & WithTabId;
   sendPremiumGiftByStars: {
     userId: string;
@@ -2587,7 +2612,7 @@ export interface ActionPayloads {
 
   updateStarGiftPrice: {
     gift: ApiInputSavedStarGift;
-    price: number;
+    price: ApiTypeCurrencyAmount;
   } & WithTabId;
 
   openStarsGiftModal: ({
@@ -2631,6 +2656,16 @@ export interface ActionPayloads {
 
   openPaymentMessageConfirmDialogOpen: WithTabId | undefined;
   closePaymentMessageConfirmDialogOpen: WithTabId | undefined;
+  openPriceConfirmModal: {
+    originalAmount: number;
+    newAmount: number;
+    currency: 'TON' | 'XTR';
+    directInfo: {
+      formId: string;
+      inputInvoice: ApiInputInvoice;
+    };
+  } & WithTabId;
+  closePriceConfirmModal: WithTabId | undefined;
 
   // Forums
   toggleForum: {

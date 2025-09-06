@@ -37,6 +37,7 @@ import type {
   ApiSticker,
   ApiStickerSet,
   ApiTimezone,
+  ApiTonAmount,
   ApiTranscription,
   ApiUpdateAuthorizationStateType,
   ApiUpdateConnectionStateType,
@@ -46,6 +47,7 @@ import type {
   ApiUserStatus,
   ApiVideo,
   ApiWallpaper,
+  ApiWebPage,
   ApiWebSession,
 } from '../../api/types';
 import type {
@@ -74,7 +76,7 @@ export type GlobalState = {
   cacheVersion: number;
   isInited: boolean;
   config?: ApiConfig;
-  appConfig?: ApiAppConfig;
+  appConfig: ApiAppConfig;
   peerColors?: ApiPeerColors;
   timezones?: {
     byId: Record<string, ApiTimezone>;
@@ -237,6 +239,7 @@ export type GlobalState = {
     }>;
     sponsoredByChatId: Record<string, ApiSponsoredMessage>;
     pollById: Record<string, ApiPoll>;
+    webPageById: Record<string, ApiWebPage>;
   };
 
   stories: {
@@ -273,6 +276,7 @@ export type GlobalState = {
     byId: Record<number, ApiChatFolder>;
     invites: Record<number, ApiChatlistExportedInvite[]>;
     recommended?: ApiChatFolder[];
+    areTagsEnabled?: boolean;
   };
 
   phoneCall?: ApiPhoneCall;
@@ -367,6 +371,7 @@ export type GlobalState = {
   defaultTopicIconsId?: string;
   defaultStatusIconsId?: string;
   premiumGifts?: ApiStickerSet;
+  tonGifts?: ApiStickerSet;
   emojiKeywords: Record<string, EmojiKeywords | undefined>;
 
   collectibleEmojiStatuses?: {
@@ -451,6 +456,10 @@ export type GlobalState = {
     balance: ApiStarsAmount;
     history: StarsTransactionHistory;
     subscriptions?: StarsSubscriptions;
+  };
+  ton?: {
+    balance: ApiTonAmount;
+    history: StarsTransactionHistory;
   };
 };
 

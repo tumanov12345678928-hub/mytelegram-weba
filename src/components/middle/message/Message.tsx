@@ -27,6 +27,7 @@ import type {
   ApiTopic,
   ApiTypeStory,
   ApiUser,
+  ApiWebPage,
 } from '../../../api/types';
 import type { ActionPayloads } from '../../../global/types';
 import type { ObserveFn } from '../../../hooks/useIntersectionObserver';
@@ -45,17 +46,17 @@ import type { OnIntersectPinnedMessage } from '../hooks/usePinnedMessage';
 import { MAIN_THREAD_ID } from '../../../api/types';
 import { AudioOrigin } from '../../../types';
 
-import { EMOJI_STATUS_LOOP_LIMIT, MESSAGE_APPEARANCE_DELAY, STARS_SUGGESTED_POST_FUTURE_MIN } from '../../../config';
+import { EMOJI_STATUS_LOOP_LIMIT, MESSAGE_APPEARANCE_DELAY } from '../../../config';
 import {
   areReactionsEmpty,
   getIsDownloading,
   getMainUsername,
   getMessageContent,
   getMessageCustomShape,
-  getMessageDownloadableMedia,
   getMessageHtmlId,
   getMessageSingleCustomEmoji,
   getMessageSingleRegularEmoji,
+  getMessageWebPage,
   hasMessageText,
   hasMessageTtl,
   isAnonymousForwardsChat,
@@ -85,7 +86,9 @@ import {
   selectCurrentMiddleSearch,
   selectDefaultReaction,
   selectForwardedSender,
+  selectFullWebPageFromMessage,
   selectIsChatProtected,
+  selectIsChatRestricted,
   selectIsChatWithSelf,
   selectIsCurrentUserFrozen,
   selectIsCurrentUserPremium,
@@ -95,8 +98,6 @@ import {
   selectIsMessageProtected,
   selectIsMessageSelected,
   selectMessageIdsByGroupId,
-  selectMessageLastPlaybackTimestamp,
-  selectMessageTimestampableDuration,
   selectOutgoingStatus,
   selectPeer,
   selectPeerStory,
@@ -116,6 +117,12 @@ import {
   selectUploadProgress,
   selectUser,
 } from '../../../global/selectors';
+import {
+  selectIsMediaNsfw,
+  selectMessageDownloadableMedia,
+  selectMessageLastPlaybackTimestamp,
+  selectMessageTimestampableDuration,
+} from '../../../global/selectors/media';
 import { selectSharedSettings } from '../../../global/selectors/sharedState';
 import { IS_ANDROID, IS_ELECTRON, IS_TRANSLATION_SUPPORTED } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
@@ -211,9 +218,6 @@ type MessagePositionProperties = {
 type OwnProps =
   {
     message: ApiMessage;
-    observeIntersectionForBottom?: ObserveFn;
-    observeIntersectionForLoading?: ObserveFn;
-    observeIntersectionForPlaying?: ObserveFn;
     album?: IAlbum;
     noAvatars?: boolean;
     withAvatar?: boolean;
@@ -226,6 +230,9 @@ type OwnProps =
     isJustAdded: boolean;
     memoFirstUnreadIdRef?: { current: number | undefined };
     getIsMessageListReady?: Signal<boolean>;
+    observeIntersectionForBottom?: ObserveFn;
+    observeIntersectionForLoading?: ObserveFn;
+    observeIntersectionForPlaying?: ObserveFn;
     onIntersectPinnedMessage?: OnIntersectPinnedMessage;
   }
   & MessagePositionProperties;
@@ -303,19 +310,22 @@ type StateProps = {
   webPageStory?: ApiTypeStory;
   isConnected: boolean;
   isLoadingComments?: boolean;
-  shouldWarnAboutSvg?: boolean;
+  shouldWarnAboutFiles?: boolean;
   senderBoosts?: number;
   tags?: Record<ApiReactionKey, ApiSavedReactionTag>;
   canTranscribeVoice?: boolean;
   viaBusinessBot?: ApiUser;
   effect?: ApiAvailableEffect;
   poll?: ApiPoll;
+  webPage?: ApiWebPage;
   maxTimestamp?: number;
   lastPlaybackTimestamp?: number;
   paidMessageStars?: number;
   isChatWithUser?: boolean;
   isAccountFrozen?: boolean;
   minFutureTime?: number;
+  isMediaNsfw?: boolean;
+  isReplyMediaNsfw?: boolean;
 };
 
 type MetaPosition =
@@ -428,7 +438,7 @@ const Message: FC<OwnProps & StateProps> = ({
   webPageStory,
   isConnected,
   getIsMessageListReady,
-  shouldWarnAboutSvg,
+  shouldWarnAboutFiles,
   senderBoosts,
   tags,
   canTranscribeVoice,
@@ -437,11 +447,14 @@ const Message: FC<OwnProps & StateProps> = ({
   poll,
   maxTimestamp,
   lastPlaybackTimestamp,
-  onIntersectPinnedMessage,
+  isMediaNsfw,
+  isReplyMediaNsfw,
   paidMessageStars,
   isChatWithUser,
   isAccountFrozen,
   minFutureTime,
+  webPage,
+  onIntersectPinnedMessage,
 }) => {
   const {
     toggleMessageSelection,
@@ -533,7 +546,7 @@ const Message: FC<OwnProps & StateProps> = ({
   const {
     photo = paidMediaPhoto, video = paidMediaVideo, audio,
     voice, document, sticker, contact,
-    webPage, invoice, location,
+    invoice, location,
     action, game, storyData, giveaway,
     giveawayResults, todo,
   } = getMessageContent(message);
@@ -663,6 +676,7 @@ const Message: FC<OwnProps & StateProps> = ({
     lang: oldLang,
     selectMessage,
     message,
+    webPage,
     chatId,
     threadId,
     isInDocumentGroup,
@@ -793,6 +807,7 @@ const Message: FC<OwnProps & StateProps> = ({
 
   const contentClassName = buildContentClassName(message, album, {
     poll,
+    webPage,
     hasSubheader,
     isCustomShape,
     isLastInGroup,
@@ -1011,7 +1026,11 @@ const Message: FC<OwnProps & StateProps> = ({
 
     return (
       <div
-        className={buildClassName('quick-reaction', isQuickReactionVisible && !hasActiveReactions && 'visible')}
+        className={buildClassName(
+          'quick-reaction',
+          'no-selection',
+          isQuickReactionVisible && !hasActiveReactions && 'visible',
+        )}
         onClick={handleSendQuickReaction}
         ref={quickReactionRef}
       >
@@ -1119,6 +1138,7 @@ const Message: FC<OwnProps & StateProps> = ({
                 senderChat={replyMessageChat}
                 forwardSender={replyMessageForwardSender}
                 chatTranslations={chatTranslations}
+                isMediaNsfw={isReplyMediaNsfw}
                 requestedChatTranslationLanguage={requestedChatTranslationLanguage}
                 observeIntersectionForLoading={observeIntersectionForLoading}
                 observeIntersectionForPlaying={observeIntersectionForPlaying}
@@ -1145,6 +1165,7 @@ const Message: FC<OwnProps & StateProps> = ({
             shouldLoop={shouldLoopStickers}
             shouldPlayEffect={shouldPlayEffect}
             withEffect={withAnimatedEffects}
+            isMediaNsfw={isMediaNsfw}
             onStopEffect={hideEffect}
           />
         )}
@@ -1240,7 +1261,7 @@ const Message: FC<OwnProps & StateProps> = ({
             onMediaClick={handleDocumentClick}
             onCancelUpload={handleCancelUpload}
             isDownloading={isDownloading}
-            shouldWarnAboutSvg={shouldWarnAboutSvg}
+            shouldWarnAboutFiles={shouldWarnAboutFiles}
           />
         )}
         {storyData && !isStoryMention && (
@@ -1265,6 +1286,7 @@ const Message: FC<OwnProps & StateProps> = ({
         {game && (
           <Game
             message={message}
+            threadId={threadId}
             canAutoLoadMedia={canAutoLoadMedia}
           />
         )}
@@ -1389,8 +1411,12 @@ const Message: FC<OwnProps & StateProps> = ({
   }
 
   function renderWebPage() {
-    return webPage && (
+    const messageWebPage = getMessageWebPage(message);
+    if (!messageWebPage || !webPage) return undefined;
+    return (
       <WebPage
+        messageWebPage={messageWebPage}
+        webPage={webPage}
         message={message}
         observeIntersectionForLoading={observeIntersectionForLoading}
         observeIntersectionForPlaying={observeIntersectionForPlaying}
@@ -1405,7 +1431,7 @@ const Message: FC<OwnProps & StateProps> = ({
         isConnected={isConnected}
         lastPlaybackTimestamp={lastPlaybackTimestamp}
         backgroundEmojiId={messageColorPeer?.color?.backgroundEmojiId}
-        shouldWarnAboutSvg={shouldWarnAboutSvg}
+        shouldWarnAboutFiles={shouldWarnAboutFiles}
         autoLoadFileMaxSizeMb={autoLoadFileMaxSizeMb}
         onAudioPlay={handleAudioPlay}
         onMediaClick={handleMediaClick}
@@ -1443,6 +1469,7 @@ const Message: FC<OwnProps & StateProps> = ({
             isProtected={isProtected}
             asForwarded={asForwarded}
             theme={theme}
+            isMediaNsfw={isMediaNsfw}
             forcedWidth={contentWidth}
             onClick={handlePhotoMediaClick}
             onCancelUpload={handleCancelUpload}
@@ -1462,6 +1489,7 @@ const Message: FC<OwnProps & StateProps> = ({
             isDownloading={isDownloading}
             isProtected={isProtected}
             asForwarded={asForwarded}
+            isMediaNsfw={isMediaNsfw}
             lastPlaybackTimestamp={lastPlaybackTimestamp}
             onClick={handleVideoMediaClick}
             onCancelUpload={handleCancelUpload}
@@ -1855,7 +1883,9 @@ export default memo(withGlobal<OwnProps>(
       paidMessageStars,
     } = message;
 
-    const { shouldWarnAboutSvg } = selectSharedSettings(global);
+    const webPage = selectFullWebPageFromMessage(global, message);
+
+    const { shouldWarnAboutFiles } = selectSharedSettings(global);
     const isChatWithUser = isUserId(chatId);
 
     const chat = selectChat(global, chatId);
@@ -1865,7 +1895,7 @@ export default memo(withGlobal<OwnProps>(
     const isChannel = chat && isChatChannel(chat);
     const isGroup = chat && isChatGroup(chat);
     const chatFullInfo = !isChatWithUser ? selectChatFullInfo(global, chatId) : undefined;
-    const webPageStoryData = message.content.webPage?.story;
+    const webPageStoryData = webPage?.story;
     const webPageStory = webPageStoryData
       ? selectPeerStory(global, webPageStoryData.peerId, webPageStoryData.id)
       : undefined;
@@ -1895,7 +1925,7 @@ export default memo(withGlobal<OwnProps>(
     const replyMessageChat = replyToPeerId ? selectChat(global, replyToPeerId) : undefined;
     const isReplyPrivate = !isSystemBotChat && !isAnonymousForwards && replyMessageChat
       && !isChatPublic(replyMessageChat)
-      && (replyMessageChat.isNotJoined || replyMessageChat.isRestricted);
+      && (replyMessageChat.isNotJoined || selectIsChatRestricted(global, replyMessageChat.id));
     const isReplyToTopicStart = replyMessage?.content.action?.type === 'topicCreate';
     const replyStory = storyReplyId && storyReplyPeerId
       ? selectPeerStory(global, storyReplyPeerId, storyReplyId)
@@ -1931,7 +1961,7 @@ export default memo(withGlobal<OwnProps>(
 
     const canReply = messageListType === 'thread' && selectCanReplyToMessage(global, message, threadId);
     const activeDownloads = selectActiveDownloads(global);
-    const downloadableMedia = getMessageDownloadableMedia(message);
+    const downloadableMedia = selectMessageDownloadableMedia(global, message);
     const isDownloading = downloadableMedia && getIsDownloading(activeDownloads, downloadableMedia);
 
     const repliesThreadInfo = selectThreadInfo(global, chatId, album?.commentsMessage?.id || id);
@@ -1966,7 +1996,7 @@ export default memo(withGlobal<OwnProps>(
       ? (chatFullInfo?.boostsApplied ?? message.senderBoosts) : message.senderBoosts;
 
     const chatLevel = chat?.boostLevel || 0;
-    const transcribeMinLevel = global.appConfig?.groupTranscribeLevelMin;
+    const transcribeMinLevel = global.appConfig.groupTranscribeLevelMin;
     const canTranscribeVoice = isPremium || Boolean(transcribeMinLevel && chatLevel >= transcribeMinLevel);
 
     const viaBusinessBot = viaBusinessBotId ? selectUser(global, viaBusinessBotId) : undefined;
@@ -1980,7 +2010,10 @@ export default memo(withGlobal<OwnProps>(
     const lastPlaybackTimestamp = selectMessageLastPlaybackTimestamp(global, chatId, message.id);
     const isAccountFrozen = selectIsCurrentUserFrozen(global);
 
-    const minFutureTime = global.appConfig?.starsSuggestedPostFutureMin || STARS_SUGGESTED_POST_FUTURE_MIN;
+    const minFutureTime = global.appConfig.starsSuggestedPostFutureMin;
+
+    const isMediaNsfw = selectIsMediaNsfw(global, message);
+    const isReplyMediaNsfw = replyMessage && selectIsMediaNsfw(global, replyMessage);
 
     return {
       theme: selectTheme(global),
@@ -2053,7 +2086,7 @@ export default memo(withGlobal<OwnProps>(
       isLoadingComments: repliesThreadInfo?.isCommentsInfo
         && loadingThread?.loadingChatId === repliesThreadInfo?.originChannelId
         && loadingThread?.loadingMessageId === repliesThreadInfo?.originMessageId,
-      shouldWarnAboutSvg,
+      shouldWarnAboutFiles,
       ...(isOutgoing && { outgoingStatus: selectOutgoingStatus(global, message, messageListType === 'scheduled') }),
       ...(typeof uploadProgress === 'number' && { uploadProgress }),
       ...(isFocused && {
@@ -2076,6 +2109,9 @@ export default memo(withGlobal<OwnProps>(
       paidMessageStars,
       isChatWithUser,
       isAccountFrozen,
+      isMediaNsfw,
+      isReplyMediaNsfw,
+      webPage,
     };
   },
 )(Message));

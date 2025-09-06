@@ -1,4 +1,4 @@
-import type { InlineBotSettings } from '../../../types';
+import type { InlineBotSettings, ThreadId } from '../../../types';
 import type { WebApp } from '../../../types/webapp';
 import type { RequiredGlobalActions } from '../../index';
 import type {
@@ -21,7 +21,6 @@ import { getCurrentTabId } from '../../../util/establishMultitabRole';
 import { getTranslationFn } from '../../../util/localization';
 import { formatStarsAsText } from '../../../util/localization/format';
 import { oldTranslate } from '../../../util/oldLangProvider';
-import PopupManager from '../../../util/PopupManager';
 import requestActionTimeout from '../../../util/requestActionTimeout';
 import { debounce } from '../../../util/schedulers';
 import { getServerTime } from '../../../util/serverTime';
@@ -73,7 +72,6 @@ import { getPeerStarsForMessage } from './messages';
 
 import { getIsWebAppsFullscreenSupported } from '../../../hooks/useAppLayout';
 
-const GAMEE_URL = 'https://prizes.gamee.com/';
 const TOP_PEERS_REQUEST_COOLDOWN = 60; // 1 min
 const runDebouncedForSearch = debounce((cb) => cb(), 500, false);
 let botFatherId: string | null;
@@ -97,7 +95,7 @@ addActionHandler('clickSuggestedMessageButton', (global, actions, payload): Acti
 
 addActionHandler('clickBotInlineButton', (global, actions, payload): ActionReturnType => {
   const {
-    chatId, messageId, button, tabId = getCurrentTabId(),
+    chatId, messageId, threadId, button, tabId = getCurrentTabId(),
   } = payload;
   const chat = selectChat(global, chatId);
   const message = selectChatMessage(global, chatId, messageId);
@@ -111,7 +109,7 @@ addActionHandler('clickBotInlineButton', (global, actions, payload): ActionRetur
       break;
     case 'url': {
       const { url } = button;
-      actions.openUrl({ url, tabId });
+      actions.openUrl({ url, tabId, linkContext: { type: 'message', chatId, messageId, threadId } });
       break;
     }
     case 'copy': {
@@ -120,7 +118,7 @@ addActionHandler('clickBotInlineButton', (global, actions, payload): ActionRetur
       break;
     }
     case 'callback': {
-      void answerCallbackButton(global, actions, chat, messageId, button.data, undefined, tabId);
+      void answerCallbackButton(global, actions, chat, messageId, threadId, button.data, undefined, tabId);
       break;
     }
     case 'requestPoll':
@@ -159,7 +157,7 @@ addActionHandler('clickBotInlineButton', (global, actions, payload): ActionRetur
       break;
     }
     case 'game': {
-      void answerCallbackButton(global, actions, chat, messageId, undefined, true, tabId);
+      void answerCallbackButton(global, actions, chat, messageId, threadId, undefined, true, tabId);
       break;
     }
     case 'switchBotInline': {
@@ -1287,26 +1285,14 @@ async function sendBotCommand(
   });
 }
 
-let gameePopups: PopupManager | undefined;
-
 async function answerCallbackButton<T extends GlobalState>(
   global: T,
-  actions: RequiredGlobalActions, chat: ApiChat, messageId: number, data?: string, isGame = false,
+  actions: RequiredGlobalActions, chat: ApiChat, messageId: number, threadId?: ThreadId, data?: string, isGame = false,
   ...[tabId = getCurrentTabId()]: TabArgs<T>
 ) {
   const {
     showDialog, showNotification, openUrl, openGame,
   } = actions;
-
-  if (isGame) {
-    if (!gameePopups) {
-      gameePopups = new PopupManager('popup,width=800,height=600', () => {
-        showNotification({ message: 'Allow browser to open popup window', tabId });
-      });
-    }
-
-    gameePopups.preOpenIfNeeded();
-  }
 
   const result = await callApi('answerCallbackButton', {
     chatId: chat.id,
@@ -1327,17 +1313,11 @@ async function answerCallbackButton<T extends GlobalState>(
     showNotification({ message, tabId });
   } else if (url) {
     if (isGame) {
-      // Workaround for Gamee embedding bug
-      if (url.includes(GAMEE_URL)) {
-        gameePopups!.open(url);
-      } else {
-        gameePopups!.cancelPreOpen();
-        openGame({
-          url, chatId: chat.id, messageId, tabId,
-        });
-      }
+      openGame({
+        url, chatId: chat.id, messageId, tabId,
+      });
     } else {
-      openUrl({ url, tabId });
+      openUrl({ url, tabId, linkContext: { type: 'message', chatId: chat.id, messageId, threadId } });
     }
   }
 }
@@ -1444,7 +1424,7 @@ addActionHandler('startBotFatherConversation', async (global, actions, payload):
 });
 
 addActionHandler('loadBotFreezeAppeal', async (global): Promise<void> => {
-  const botUrl = global.appConfig?.freezeAppealUrl;
+  const botUrl = global.appConfig.freezeAppealUrl;
   if (!botUrl) return;
   const botAppealUsername = botUrl ? getUsernameFromDeepLink(botUrl) : undefined;
   if (!botAppealUsername) return;
